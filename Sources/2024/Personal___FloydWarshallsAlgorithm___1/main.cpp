@@ -9,9 +9,9 @@ int main(void)
     std::cin.tie(NULL);
     std::cout.tie(NULL);
 
-    std::cout << "Hello World!" << '\n';
+    
 
-    int exitCode = 0;
+    bool exitCode;
     std::cin >> exitCode;
     return 0;
 }
