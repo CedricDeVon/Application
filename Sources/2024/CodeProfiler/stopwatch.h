@@ -12,7 +12,9 @@ class Stopwatch
     public:
         Stopwatch();
         ~Stopwatch();
-        constexpr double getDuration() const;
+        constexpr const bool getHasStarted();
+        constexpr const bool getHasStoped();
+        constexpr const long double getDuration();
         void start();
         void stop();
         void reset();

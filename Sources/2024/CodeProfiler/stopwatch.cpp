@@ -13,7 +13,17 @@ Stopwatch::~Stopwatch()
 
 }
 
-constexpr double Stopwatch::getDuration() const
+constexpr const bool Stopwatch::getHasStarted()
+{
+    return this->hasStarted;
+}
+
+constexpr const bool Stopwatch::getHasStoped()
+{
+    return this->hasStoped;
+}
+
+constexpr const long double Stopwatch::getDuration()
 {
     if (!this->hasStarted || !this->hasStoped)
     {
