@@ -1,89 +1,97 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
 #include <functional>
 #include <filesystem>
 
+#include "stopwatch.h"
+#include "codeProfilerSettings.h"
 #include "codeProfiler.h"
 
 CodeProfiler::CodeProfiler(
-    CodeProfilerSettings*& settings)
+    const std::string& subResultsFolderName,
+    const unsigned long long int inputStartSize,
+    const unsigned long long int inputLimitSize,
+    const unsigned long long int inputLeapSize)
 {
-    this->settings = settings;
+    this->outputFileStream = new std::ofstream();
     this->subExecutionStopwatch = new Stopwatch();
     this->mainExecutionStopwatch = new Stopwatch();
-
-    std::string folderPath = settings->rootResultsFolderPath;
-    if (!std::filesystem::exists(folderPath))
+    this->settings = new CodeProfilerSettings(subResultsFolderName, inputStartSize, inputLimitSize, inputLeapSize);
+    std::string filePath = this->settings->getRootResultsFolderPath();
+    if (!std::filesystem::exists(filePath))
     {
-        std::filesystem::create_directories(folderPath);
+        std::filesystem::create_directories(filePath);
     }
-    folderPath = settings->getSubResultsFolderPath(); 
-    if (std::filesystem::exists(folderPath))
+    filePath = settings->getSubResultsFolderPath(); 
+    if (std::filesystem::exists(filePath))
     {
-        std::filesystem::remove_all(folderPath);
+        std::filesystem::remove_all(filePath);
     }
-    std::filesystem::create_directories(folderPath);
+    std::filesystem::create_directories(filePath);
 }
 
 CodeProfiler::~CodeProfiler()
 {
+    delete this->outputFileStream;
     delete this->settings;
     delete this->subExecutionStopwatch;
     delete this->mainExecutionStopwatch;
 }
 
-void CodeProfiler::logToConsole(const std::string& text)
-{
-    if (this->settings->isConsoleLoggingEnabled)
-    {
-        std::cout << text;
-    }
-}
-
-void CodeProfiler::logToFile(const std::string& outputFilePath, const std::string& text)
-{
-    std::fstream outputFile;
-    outputFile.open(outputFilePath, std::ios::out);
-    outputFile << text;
-    outputFile.close();
-}
-
 void CodeProfiler::recordRunningTime(
-    const std::string& outputResultFile,
+    const std::string& outputResultsFile,
     const std::function<void(unsigned long long int)> &duringExecution,
     const std::function<void(unsigned long long int)> beforeExecution = [](unsigned long long int) -> void {},
     const std::function<void(unsigned long long int)> afterExecution = [](unsigned long long int) -> void {})
 {
     this->mainExecutionStopwatch->start();
-    std::string resultFileData, currentInputSizeString, currentDurationString;
-    this->logToConsole('\'' + outputResultFile + "\' Running Time Profile:\nInput Size, Running Time (In Seconds)\n");
-    for (unsigned long long int currentInputSize = this->settings->inputStartSize;
-         currentInputSize < this->settings->loopLimitSize;
-         currentInputSize += this->settings->inputLeapSize)
+    this->settings->setResultsFileName(outputResultsFile);
+    const bool isConsoleLoggingEnabled = this->settings->getIsConsoleLoggingEnabled();
+    unsigned long long int currentInputSize = this->settings->getInputStartSize();
+    const unsigned long long int loopLimitSize = this->settings->getLoopLimitSize(),
+        inputLeapSize = this->settings->getInputLeapSize();
+    std::string resultsFileData, currentResultString;
+    if (isConsoleLoggingEnabled)
     {
-        currentInputSizeString = (std::ostringstream() << currentInputSize).str();
+        std::cout << '\'' + outputResultsFile + "\' Running Time Profile:\nInput Size, Running Time (In Seconds)\n";
+    }
+    while (currentInputSize < loopLimitSize)
+    {
+        beforeExecution(currentInputSize);
         this->subExecutionStopwatch->start();
         duringExecution(currentInputSize);
         this->subExecutionStopwatch->stop();
-        currentDurationString = (std::ostringstream() << this->subExecutionStopwatch->getDuration()).str();
-        this->logToConsole(currentInputSizeString + ", " + currentDurationString + '\n');
+        afterExecution(currentInputSize);
+        currentResultString = (std::ostringstream() << currentInputSize).str() + ',' + (std::ostringstream() << this->subExecutionStopwatch->getDuration()).str() + '\n';
         this->subExecutionStopwatch->reset();
-
-        resultFileData += currentInputSizeString + ',' + currentDurationString + '\n';
+        if (isConsoleLoggingEnabled)
+        {
+            std::cout << currentResultString;
+        }
+        resultsFileData += currentResultString;
+        currentInputSize += inputLeapSize;
     }
-    this->logToFile(this->settings->getResultFilePath(outputResultFile), resultFileData);
+    this->outputFileStream->open(this->settings->getResultsFilePath(), std::ios::out);
+    *this->outputFileStream << resultsFileData;
+    this->outputFileStream->close();
     this->mainExecutionStopwatch->stop();
-    this->logToConsole("Total Duration: " + (std::ostringstream() << this->mainExecutionStopwatch->getDuration()).str() + "\n\n");
+    if (isConsoleLoggingEnabled)
+    {
+        std::cout << "Total Duration: " + (std::ostringstream() << this->mainExecutionStopwatch->getDuration()).str() + "\n\n";
+    }
     this->mainExecutionStopwatch->reset();
 }
 
 void CodeProfiler::visualizeResults()
 {
-    if (this->settings->isVisualizationEnabled)
+    if (this->settings->getIsVisualizationEnabled())
     {
-        std::cout << "Visualizing \'" +  this->settings->subResultsFolderName + "\' code profiler results...\n";
-        system(("python " + this->settings->getResultVisualizerFilePath() + " " + this->settings->getSubResultsFolderPath() + " " + this->settings->subResultsFolderName).c_str());
+        std::cout << "Visualizing \'" +  this->settings->getSubResultsFolderName() + "\' code running time results...\n";
+        system(("python " + this->settings->getResultsVisualizerFilePath() + " " + this->settings->getSubResultsFolderPath() + " " + this->settings->getSubResultsFolderName()).c_str());
         std::cout << "Complete!\n";
     }
 }
+
+

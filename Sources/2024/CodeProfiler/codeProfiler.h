@@ -13,14 +13,16 @@
 class CodeProfiler
 {
 private:
+    std::ofstream* outputFileStream;
     Stopwatch* subExecutionStopwatch, *mainExecutionStopwatch;
     CodeProfilerSettings* settings;
 
-    void logToConsole(const std::string&);
-    void logToFile(const std::string&, const std::string&);
-
 public:
-    CodeProfiler(CodeProfilerSettings*&);
+    CodeProfiler(
+        const std::string&,
+        const unsigned long long int,
+        const unsigned long long int,
+        const unsigned long long int);
     ~CodeProfiler();
     void recordRunningTime(
         const std::string&,
