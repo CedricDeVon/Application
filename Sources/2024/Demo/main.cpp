@@ -11,64 +11,16 @@ int main(void)
     // std::cin.tie(NULL);
     // std::cout.tie(NULL);
 
-    int** m;
-    int* pa, *pb;
-    CodeProfiler* profiler = new CodeProfiler("LoopTests", 100, 10000, 100);
-    profiler->recordRunningTime("V1",
-    [&m, &pa, &pb](unsigned long long int n) -> void {
-        while (pa < pb)
-        {
-            *pa++ = 0;
-        }
-        pa = *m;
-        while (pa < pb)
-        {
-            *pa++ = 2;
-        }
+    CodeProfiler* profiler = new CodeProfiler("DisplayTesting", 10, 1000, 10);
+    profiler->recordRunningTime("Dynamic_Pointer_Arithmetic",
+    [](unsigned long long int n) -> void {
+
     },
-    [&m, &pa, &pb](unsigned long long int n) -> void {
-        m = new int*[n];
-        for (unsigned long long int i = 0; i < n; ++i)
-        {
-            m[i] = new int[n];
-        }
-        pa = *m;
-        pb = *(m + n) + n + 1;
+    [](unsigned long long int n) -> void {
+
     },
-    [&m](unsigned long long int n) -> void {
-        for (unsigned long long int i = 0; i < n; ++i)
-        {
-            free(m[i]);
-        }
-        free(m);
-    });
-    profiler->recordRunningTime("V2",
-    [&m](unsigned long long int n) -> void {
-        for (unsigned long long int i = 0; i < n; ++i)
-        {
-            for (unsigned long long int j = 0; j < n; ++j)
-            {
-                m[i][j] = 0;
-            }
-            for (unsigned long long int j = 0; j < n; ++j)
-            {
-                m[i][j] = 2;
-            }  
-        }
-    },
-    [&m](unsigned long long int n) -> void {
-        m = new int*[n];
-        for (unsigned long long int i = 0; i < n; ++i)
-        {
-            m[i] = new int[n];
-        }
-    },
-    [&m](unsigned long long int n) -> void {
-        for (unsigned long long int i = 0; i < n; ++i)
-        {
-            free(m[i]);
-        }
-        free(m);
+    [](unsigned long long int n) -> void {
+
     });
     profiler->visualizeResults();
 
@@ -83,3 +35,27 @@ int main(void)
 // std::cout << "~(35) : " << ~(35) << '\n';
 // std::cout << "(212 >> n) : " << (212 >> 0) << ", " << (212 >> 1) << ", " << (212 >> 2) << '\n';
 // std::cout << "(212 << n) : " << (212 << 0) << ", " << (212 << 1) << ", " << (212 << 2) << '\n';
+
+// #define _GLIBCXX_USE_NANOSLEEP
+// #include <iostream>
+// #include <string>
+// #include <thread>
+
+// void callback(const std::string& data)
+// {
+//     std::cout << "Callback called because: " << data << '\n';
+// }
+
+// void task(int time, const std::string& message)
+// {
+//     std::this_thread::sleep_for(std::chrono::seconds(time));
+//     callback(message);
+// }
+
+// std::cout << "async task launched\n";
+// std::this_thread::sleep_for(std::chrono::seconds(3));
+// std::thread ba(task, 2, "Async Message 1");
+// std::thread bb(task, 1, "Async Message 2");
+// std::cout << "main done\n";
+// ba.join();
+// bb.join();
