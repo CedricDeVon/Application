@@ -9,19 +9,19 @@ void solution()
     unsigned short int a;
     std::cin >> a;
     
-    std::cout << "I hate" << ((a == 1) ? " it" : "");
+    std::cout << "I hate";
+    if (a == 1)
+    {
+        std::cout << " it";
+        return;
+    }
+
     while (--a > 0)
     {
-        if (b)
-        {
-            std::cout << " that I love it";
-        }
-        else
-        {
-            std::cout << " that I hate it";
-        }
+        std::cout << ((b) ? " that I love" : " that I hate");
         b = !b;
     }
+    std::cout << " it";
 }
 
 
